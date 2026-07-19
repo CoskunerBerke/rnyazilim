@@ -5,7 +5,19 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import Button from "../ui/Button";
-import AtomLogo from "../ui/AtomLogo";
+import dynamic from "next/dynamic";
+
+// Three.js atom — loaded client-side only to avoid SSR/WebGL issues
+const HeroAtom3D = dynamic(() => import("../ui/HeroAtom3D"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full" style={{ aspectRatio: "1/1" }}>
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full border border-primary-light/30 animate-pulse" />
+      </div>
+    </div>
+  ),
+});
 
 export const HeroSection: React.FC = () => {
   return (
@@ -90,16 +102,15 @@ export const HeroSection: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* Atom Animation Visual */}
+          {/* 3D Atom Visual */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.0, delay: 0.3, type: "spring", stiffness: 60 }}
             className="lg:col-span-5 flex items-center justify-center w-full relative"
           >
-            {/* Soft ambient radial glow behind atom */}
             <div className="absolute inset-0 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
-            <AtomLogo className="w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] lg:w-[420px] lg:h-[420px] xl:w-[460px] xl:h-[460px]" />
+            <HeroAtom3D className="max-w-[300px] sm:max-w-[360px] lg:max-w-[440px] xl:max-w-[500px] mx-auto" />
           </motion.div>
         </div>
       </div>
