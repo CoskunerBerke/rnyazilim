@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RN Yazılım Kurumsal Web Sitesi
 
-## Getting Started
+Bu proje, Turkish yazılım şirketi **RN Yazılım** için geliştirilmiş, yüksek performanslı, premium, karanlık tema odaklı ve tamamen responsive kurumsal web sitesidir.
 
-First, run the development server:
+Şirket Alan Adı: **https://rnyazilim.com**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🚀 Teknolojik Altyapı (Technology Stack)
+
+* **Framework:** Next.js 16 (App Router)
+* **Dil:** TypeScript
+* **Stil:** Tailwind CSS v4 (CSS tabanlı yeni nesil tema yapılandırması)
+* **Animasyonlar:** Framer Motion (Mikro etkileşimler ve reveal-on-scroll efektleri)
+* **İkonlar:** Lucide React
+* **Form Yönetimi:** React Hook Form
+* **Doğrulama (Validation):** Zod
+* **Derleme/Paketleyici:** Webpack (Windows multi-byte karakterli yerel klasör yolları uyumluluğu için `--webpack` bayrağı ile yapılandırılmıştır)
+
+## 📁 Proje Klasör Yapısı (Project Structure)
+
+```text
+src/
+  app/                    # Next.js App Router sayfaları (Hakkımızda, Hizmetler, Projeler, Yasal Sayfalar vb.)
+  components/
+    layout/               # Header, Footer gibi yapısal bileşenler
+    sections/             # Sayfa bölümleri (Hero, Services, FAQ, Contact vb.)
+    ui/                   # Atomik ve animasyonlu UI elemanları (Button, Card, Accordion, HeroVisual vb.)
+    forms/                # Zod onaylı teklif isteme formu (ContactForm)
+  content/                # Merkezi şirket veri yönetimi (company.ts)
+  styles/                 # Küresel stiller ve CSS animasyonları
+  types/                  # TypeScript tip tanımları (index.ts)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ⚙️ Kurulum ve Çalıştırma (Installation & Running)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. Bağımlılıkların Yüklenmesi
+Projeyi çalıştırmadan önce terminalde aşağıdaki komutla tüm paketleri yükleyin:
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2. Yerel Geliştirme Sunucusunu Başlatma
+Yerel sunucuyu (`http://localhost:3000`) çalıştırmak için:
+```bash
+npm run dev
+```
 
-## Learn More
+### 3. Production Derlemesi Alma
+Projenin optimize edilmiş production sürümünü derlemek için:
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Derlenen Sürümü Yerelde Test Etme
+Derlenen production paketini yerelde çalıştırmak için:
+```bash
+npm run start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ✏️ Şirket Bilgileri ve İçerik Yönetimi
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Sitedeki tüm şirket bilgileri, hizmetler, projeler, SSS ve yasal politikalar tek bir merkezi dosyada tutulmaktadır. Değişiklik yapmak için başka hiçbir bileşene dokunmadan **`src/content/company.ts`** dosyasını düzenlemeniz yeterlidir:
 
-## Deploy on Vercel
+* **Şirket Bilgileri:** `companyInfo` nesnesinden resmi adı, e-postayı, telefonu, WhatsApp numarasını, adresi ve sosyal ağ linklerini güncelleyebilirsiniz.
+* **Hizmetler:** `services` dizisine yeni bir hizmet ekleyebilir veya mevcut hizmetlerin başlık, açıklama ve teknolojilerini düzenleyebilirsiniz.
+* **Projeler:** `projects` dizisi üzerinden örnek vaka çalışmalarını değiştirebilirsiniz.
+* **SSS (FAQ):** `faqItems` dizisini düzenleyerek yeni soru-cevap çiftleri ekleyebilirsiniz.
+* **Yasal Metinler:** `legalTexts` altındaki Gizlilik, Çerez, KVKK ve Kullanım Koşulları şablonlarını güncelleyebilirsiniz.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📨 İletişim Formu ve API Entegrasyonu
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+İletişim formu varsayılan olarak yerel geliştirme aşamasında simüle (mock) edilmektedir. Gerçek bir arka uç veya form servisi (Formspree, Getform vb.) bağlamak için:
+
+1. Kök dizinde `.env` dosyası oluşturun.
+2. `.env` dosyasına aşağıdaki değişkeni tanımlayın:
+```env
+NEXT_PUBLIC_FORM_ENDPOINT="https://sizin-api-servisiniz.com/endpoints/form"
+```
+Dosya mevcut olduğunda form otomatik olarak bu uç noktaya `POST` isteği atacaktır.
+
+## 🔍 SEO ve Arama Motoru Optimizasyonu
+
+* **Metadata:** Sayfa başlıkları ve açıklamaları `src/app/layout.tsx` ve her sayfanın altındaki `metadata` değişkenlerinden yönetilir.
+* **Sitemap:** `/sitemap.xml` dinamik olarak `src/app/sitemap.ts` dosyasından üretilir ve tüm hizmet ile proje sayfalarını otomatik olarak indeksler.
+* **Robots:** `/robots.txt` dosyası `src/app/robots.ts` tarafından dinamik olarak üretilir.
+* **Yapılandırılmış Veri:** Google arama sonuçlarında zengin snippet'ler göstermek üzere `Organization` JSON-LD şeması `src/app/layout.tsx` içine yerleştirilmiştir.
