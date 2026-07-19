@@ -4,13 +4,12 @@ export const companyInfo: CompanyInfo = {
   name: "RN Yazılım",
   legalName: "RN Yazılım Teknolojileri ve Danışmanlık Tic. Ltd. Şti.",
   domain: "rnyazilim.com",
-  // EDITABLE PLACEHOLDERS (Clearly marked as requested)
-  email: "info@rnyazilim.com", // [EDITABLE PLACEHOLDER]
-  phone: "+90 212 000 00 00", // [EDITABLE PLACEHOLDER]
-  phoneFormatted: "+902120000000", // [EDITABLE PLACEHOLDER]
-  whatsapp: "+90 500 000 00 00", // [EDITABLE PLACEHOLDER]
-  whatsappUrl: "https://wa.me/905000000000", // [EDITABLE PLACEHOLDER]
-  address: "Maslak Mahallesi, Büyükdere Caddesi, No: 123, Kat: 5, Sarıyer/İstanbul", // [EDITABLE PLACEHOLDER]
+  email: "rnvizedanismanlik@rnvize.com",
+  phone: "+90 532 616 12 76",
+  phoneFormatted: "+905326161276",
+  whatsapp: "+90 532 616 12 76",
+  whatsappUrl: "https://wa.me/905326161276",
+  address: "Ankara, Ankara Türkiye",
   socials: {
     linkedin: "https://linkedin.com/company/rnyazilim", // [EDITABLE PLACEHOLDER]
     github: "https://github.com/rnyazilim", // [EDITABLE PLACEHOLDER]
@@ -20,6 +19,7 @@ export const companyInfo: CompanyInfo = {
   associatedSites: [
     { name: "RN Vize", url: "https://rnvize.com/" },
   ],
+  workingHours: "Pazartesi - Cumartesi: 09:00 - 18:00 (Pazar: Kapalı)",
 };
 
 export const services: Service[] = [

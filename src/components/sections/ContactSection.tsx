@@ -65,7 +65,7 @@ export const ContactSection: React.FC = () => {
                 <div className="flex flex-col gap-1">
                   <span className="font-bold text-sm text-text-light">Çalışma Saatleri</span>
                   <span className="text-xs sm:text-sm text-text-gray">
-                    Pazartesi - Cuma: 09:00 - 18:00
+                    {companyInfo.workingHours || "Pazartesi - Cuma: 09:00 - 18:00"}
                   </span>
                 </div>
               </div>

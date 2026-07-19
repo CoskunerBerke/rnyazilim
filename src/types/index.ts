@@ -15,6 +15,7 @@ export interface CompanyInfo {
     twitter?: string;
   };
   associatedSites?: { name: string; url: string }[];
+  workingHours?: string;
 }
 
 export interface Service {
