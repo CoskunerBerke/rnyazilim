@@ -1,296 +1,282 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useMemo, useEffect, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Text } from "@react-three/drei";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import * as THREE from "three";
 import { usePerformanceMode } from "@/components/context/PerformanceModeProvider";
 
-interface OrbitDefinition {
+// ─── Orbit Component ─────────────────────────────────────────────────────────
+
+interface OrbitProps {
+  rotation: [number, number, number];
+  scale: [number, number, number];
   color: string;
-  speed: number;
-  scaleX: number;
-  scaleY: number;
-  initRotation: { x: number; y: number; z: number };
-  precessionSpeed: { x: number; y: number; z: number };
+  electronSpeed: number;
   electronOffset: number;
+  precessionSpeed: { x: number; y: number; z: number };
+  radius: number;
 }
 
+const Orbit: React.FC<OrbitProps> = ({
+  rotation,
+  scale,
+  color,
+  electronSpeed,
+  electronOffset,
+  precessionSpeed,
+  radius,
+}) => {
+  const orbitGroupRef = useRef<THREE.Group>(null!);
+  const electronRef = useRef<THREE.Mesh>(null!);
+
+  // Smooth torus geometry for the orbit ring path
+  const ringGeo = useMemo(() => new THREE.TorusGeometry(radius, 0.012, 12, 120), [radius]);
+  const ringMat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(color),
+        emissive: new THREE.Color(color),
+        emissiveIntensity: 0.8,
+        roughness: 0.3,
+        metalness: 0.1,
+        transparent: true,
+        opacity: 0.6,
+      }),
+    [color]
+  );
+
+  const electronGeo = useMemo(() => new THREE.SphereGeometry(0.065, 16, 16), []);
+  const electronMat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(color),
+        emissive: new THREE.Color(color),
+        emissiveIntensity: 2.2,
+        roughness: 0.1,
+        metalness: 0.0,
+      }),
+    [color]
+  );
+
+  useFrame((state, delta) => {
+    const elapsed = state.clock.getElapsedTime();
+
+    // 1. Precession of orbit planes
+    orbitGroupRef.current.rotation.x += precessionSpeed.x * delta * 50;
+    orbitGroupRef.current.rotation.y += precessionSpeed.y * delta * 50;
+    orbitGroupRef.current.rotation.z += precessionSpeed.z * delta * 50;
+
+    // 2. Trigonometrical electron motion inside the orbit group
+    const angle = elapsed * electronSpeed + electronOffset;
+    electronRef.current.position.set(
+      Math.cos(angle) * radius * scale[0],
+      Math.sin(angle) * radius * scale[1],
+      0
+    );
+  });
+
+  return (
+    <group ref={orbitGroupRef} rotation={rotation}>
+      {/* Orbit Ellipse Ring */}
+      <mesh geometry={ringGeo} material={ringMat} scale={scale} />
+      {/* Active Electron Sphere */}
+      <mesh ref={electronRef} geometry={electronGeo} material={electronMat} />
+    </group>
+  );
+};
+
+// ─── Nucleus Component ────────────────────────────────────────────────────────
+
+const Nucleus: React.FC = () => {
+  const nucleusRef = useRef<THREE.Group>(null!);
+  const { camera } = useThree();
+
+  useFrame((state) => {
+    // Gentle pulse scale
+    const pulse = 1 + Math.sin(state.clock.getElapsedTime() * 2.0) * 0.03;
+    nucleusRef.current.scale.set(pulse, pulse, pulse);
+
+    // Billboard core: always face the camera directly so text is readable
+    nucleusRef.current.quaternion.copy(camera.quaternion);
+  });
+
+  return (
+    <group ref={nucleusRef}>
+      {/* Outer cyan glowing shell */}
+      <mesh>
+        <sphereGeometry args={[0.3, 32, 32]} />
+        <meshStandardMaterial
+          color="#083344"
+          emissive="#22d3ee"
+          emissiveIntensity={0.4}
+          roughness={0.4}
+          transparent
+          opacity={0.65}
+        />
+      </mesh>
+      {/* Inner bright core */}
+      <mesh>
+        <sphereGeometry args={[0.15, 32, 32]} />
+        <meshStandardMaterial
+          color="#22d3ee"
+          emissive="#22d3ee"
+          emissiveIntensity={1.2}
+          roughness={0.2}
+        />
+      </mesh>
+      {/* Serif RN Monogram */}
+      <Text
+        fontSize={0.2}
+        color="#22d3ee"
+        anchorX="center"
+        anchorY="middle"
+        position={[0, 0, 0.32]}
+        font={undefined} // falls back to default sans/serif
+        letterSpacing={0.05}
+        outlineWidth={0.005}
+        outlineColor="#000000"
+      >
+        RN
+      </Text>
+    </group>
+  );
+};
+
+// ─── Scene Wrapper ───────────────────────────────────────────────────────────
+
+const Scene: React.FC = () => {
+  const atomContainerRef = useRef<THREE.Group>(null!);
+  const { mode } = usePerformanceMode();
+
+  useFrame((state, delta) => {
+    // 1. Slow global rotation of the entire atom structure
+    atomContainerRef.current.rotation.y += 0.15 * delta;
+
+    // 2. Interactive mouse parallax
+    const targetX = state.pointer.y * 0.3; // tilt based on vertical mouse
+    const targetY = state.pointer.x * 0.3; // pan based on horizontal mouse
+
+    atomContainerRef.current.rotation.x += (targetX - atomContainerRef.current.rotation.x) * 0.05;
+    atomContainerRef.current.rotation.z += (-targetY - atomContainerRef.current.rotation.z) * 0.05;
+  });
+
+  return (
+    <>
+      <ambientLight intensity={0.25} />
+      <pointLight position={[5, 5, 5]} intensity={1.5} color="#22d3ee" />
+      <pointLight position={[-5, -5, -5]} intensity={0.8} color="#8b5cf6" />
+      
+      {/* Core container holding orbits & nucleus */}
+      <group ref={atomContainerRef}>
+        {/* Orbit 1 — Cyan (#22d3ee) */}
+        <Orbit
+          rotation={[Math.PI / 2.7, 0, 0]}
+          scale={[1.5, 0.72, 1.0]}
+          color="#22d3ee"
+          electronSpeed={0.65}
+          electronOffset={0}
+          precessionSpeed={{ x: 0, y: 0.0006, z: 0.0002 }}
+          radius={1.15}
+        />
+        {/* Orbit 2 — Violet (#8b5cf6) */}
+        <Orbit
+          rotation={[Math.PI / 3.2, Math.PI / 2.8, Math.PI / 3.5]}
+          scale={[1.45, 0.68, 1.0]}
+          color="#8b5cf6"
+          electronSpeed={0.48}
+          electronOffset={Math.PI * 0.66}
+          precessionSpeed={{ x: -0.0003, y: 0, z: 0.0005 }}
+          radius={1.15}
+        />
+        {/* Orbit 3 — Light Blue (#38bdf8) */}
+        <Orbit
+          rotation={[-Math.PI / 3, Math.PI / 3.4, -Math.PI / 4]}
+          scale={[1.4, 0.7, 1.0]}
+          color="#38bdf8"
+          electronSpeed={0.82}
+          electronOffset={Math.PI * 1.33}
+          precessionSpeed={{ x: 0.0002, y: -0.0004, z: 0 }}
+          radius={1.15}
+        />
+        <Nucleus />
+      </group>
+
+      {/* Postprocessing Bloom glow filter (skip on low mode for speed) */}
+      {mode !== "low" && (
+        <EffectComposer>
+          <Bloom
+            luminanceThreshold={0.15}
+            luminanceSmoothing={0.85}
+            height={300}
+            intensity={1.2}
+          />
+        </EffectComposer>
+      )}
+    </>
+  );
+};
+
+// ─── Static SVG Fallback (WebGL unavailable) ─────────────────────────────────
+
+const Fallback: React.FC = () => (
+  <div className="w-full h-full flex items-center justify-center" aria-hidden="true">
+    <svg viewBox="-160 -160 320 320" xmlns="http://www.w3.org/2000/svg" className="w-full h-full max-w-[320px]">
+      <defs>
+        <filter id="fallbackGlow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+      </defs>
+      <ellipse cx="0" cy="0" rx="130" ry="45" fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeOpacity="0.85" filter="url(#fallbackGlow)" />
+      <ellipse cx="0" cy="0" rx="130" ry="45" fill="none" stroke="#8b5cf6" strokeWidth="1.5" strokeOpacity="0.85" filter="url(#fallbackGlow)" transform="rotate(60)" />
+      <ellipse cx="0" cy="0" rx="130" ry="45" fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeOpacity="0.85" filter="url(#fallbackGlow)" transform="rotate(-60)" />
+      <circle cx="0" cy="0" r="28" fill="#083344" stroke="#22d3ee" strokeWidth="1.8" strokeOpacity="0.75" />
+      <text x="0" y="7" textAnchor="middle" fontSize="18" fontWeight="bold" fontFamily="'Courier New', Courier, monospace" fill="#22d3ee" letterSpacing="3">RN</text>
+    </svg>
+  </div>
+);
+
+// ─── Exported Component ──────────────────────────────────────────────────────
+
 export const HeroAtom3D: React.FC<{ className?: string }> = ({ className = "" }) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const { mode, isReducedMotion } = usePerformanceMode();
+  const [webglSupported, setWebglSupported] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
+    try {
+      const canvas = document.createElement("canvas");
+      const ok = !!(canvas.getContext("webgl2") || canvas.getContext("webgl"));
+      setWebglSupported(ok);
+    } catch {
+      setWebglSupported(false);
+    }
+  }, []);
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  if (webglSupported === null) {
+    return (
+      <div className="w-full flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+        <div className="w-16 h-16 rounded-full border border-cyan-400/20 animate-pulse" />
+      </div>
+    );
+  }
 
-    let animId: number;
-    let width = 0;
-    let height = 0;
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      width = container.clientWidth || 400;
-      height = container.clientHeight || 400;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-
-    resize();
-    window.addEventListener("resize", resize);
-
-    // ─── 3D Math Helper Functions ─────────────────────────────────────────
-    const rotX = (x: number, y: number, z: number, angle: number) => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      return { x, y: y * cos - z * sin, z: y * sin + z * cos };
-    };
-
-    const rotY = (x: number, y: number, z: number, angle: number) => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      return { x: x * cos + z * sin, y, z: -x * sin + z * cos };
-    };
-
-    const rotZ = (x: number, y: number, z: number, angle: number) => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      return { x: x * cos - y * sin, y: x * sin + y * cos, z };
-    };
-
-    const hexToRgba = (hex: string, alpha: number) => {
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    };
-
-    // ─── Orbit Definitions ────────────────────────────────────────────────
-    const orbits: OrbitDefinition[] = [
-      {
-        color: "#06b6d4",
-        speed: 0.65,
-        scaleX: 1.5,
-        scaleY: 0.72,
-        initRotation: { x: Math.PI / 2.7, y: 0, z: 0 },
-        precessionSpeed: { x: 0, y: 0.0018, z: 0.0006 },
-        electronOffset: 0,
-      },
-      {
-        color: "#3b82f6",
-        speed: 0.48,
-        scaleX: 1.45,
-        scaleY: 0.68,
-        initRotation: { x: Math.PI / 3.2, y: Math.PI / 2.8, z: Math.PI / 3.5 },
-        precessionSpeed: { x: -0.001, y: 0, z: 0.0014 },
-        electronOffset: Math.PI * 0.7,
-      },
-      {
-        color: "#8b5cf6",
-        speed: 0.82,
-        scaleX: 1.4,
-        scaleY: 0.7,
-        initRotation: { x: -Math.PI / 3, y: Math.PI / 3.4, z: -Math.PI / 4 },
-        precessionSpeed: { x: 0.0008, y: -0.0012, z: 0 },
-        electronOffset: Math.PI * 1.4,
-      },
-    ];
-
-    // Camera perspective parameters
-    const focalLength = 320;
-    const cameraTiltX = 0.2; // slight down-angle camera
-
-    let time = 0;
-
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
-
-      // Painters algorithm list for depth sorting
-      interface Renderable {
-        type: "segment" | "electron" | "nucleus";
-        depth: number;
-        draw: () => void;
-      }
-      const renderList: Renderable[] = [];
-
-      const speedFactor = isReducedMotion ? 0 : 1;
-      time += 0.016 * speedFactor;
-
-      const baseRadius = 80;
-
-      orbits.forEach((orbit) => {
-        const rotX_current = orbit.initRotation.x + time * orbit.precessionSpeed.x;
-        const rotY_current = orbit.initRotation.y + time * orbit.precessionSpeed.y;
-        const rotZ_current = orbit.initRotation.z + time * orbit.precessionSpeed.z;
-
-        // 1. Draw Orbit Ring Line as segmented 3D points
-        const segmentCount = mode === "high" ? 100 : mode === "medium" ? 80 : 50;
-        const points = [];
-
-        for (let i = 0; i <= segmentCount; i++) {
-          const angle = (i / segmentCount) * Math.PI * 2;
-          let p = {
-            x: baseRadius * Math.cos(angle) * orbit.scaleX,
-            y: baseRadius * Math.sin(angle) * orbit.scaleY,
-            z: 0,
-          };
-
-          // Apply Precession rotations
-          p = rotZ(p.x, p.y, p.z, rotZ_current);
-          p = rotY(p.x, p.y, p.z, rotY_current);
-          p = rotX(p.x, p.y, p.z, rotX_current);
-
-          // Apply global Camera tilt
-          p = rotX(p.x, p.y, p.z, cameraTiltX);
-          points.push(p);
-        }
-
-        for (let i = 0; i < segmentCount; i++) {
-          const p1 = points[i];
-          const p2 = points[i + 1];
-
-          const scale1 = focalLength / (focalLength + p1.z);
-          const scale2 = focalLength / (focalLength + p2.z);
-
-          const x1 = p1.x * scale1 + width / 2;
-          const y1 = p1.y * scale1 + height / 2;
-          const x2 = p2.x * scale2 + width / 2;
-          const y2 = p2.y * scale2 + height / 2;
-
-          const avgDepth = (p1.z + p2.z) / 2;
-          const avgScale = (scale1 + scale2) / 2;
-
-          renderList.push({
-            type: "segment",
-            depth: avgDepth,
-            draw: () => {
-              ctx.beginPath();
-              ctx.moveTo(x1, y1);
-              ctx.lineTo(x2, y2);
-              
-              // Fade lines that go behind
-              const alpha = Math.max(0.12, Math.min(0.75, avgScale * 0.65));
-              ctx.strokeStyle = hexToRgba(orbit.color, alpha);
-              ctx.lineWidth = 1.35 * avgScale;
-              ctx.stroke();
-            },
-          });
-        }
-
-        // 2. Draw Electron particle
-        const electronAngle = (isReducedMotion ? 0.8 : time) * orbit.speed + orbit.electronOffset;
-        let ep = {
-          x: baseRadius * Math.cos(electronAngle) * orbit.scaleX,
-          y: baseRadius * Math.sin(electronAngle) * orbit.scaleY,
-          z: 0,
-        };
-
-        // Apply Precession rotations
-        ep = rotZ(ep.x, ep.y, ep.z, rotZ_current);
-        ep = rotY(ep.x, ep.y, ep.z, rotY_current);
-        ep = rotX(ep.x, ep.y, ep.z, rotX_current);
-
-        // Apply global Camera tilt
-        ep = rotX(ep.x, ep.y, ep.z, cameraTiltX);
-
-        const eScale = focalLength / (focalLength + ep.z);
-        const ex = ep.x * eScale + width / 2;
-        const ey = ep.y * eScale + height / 2;
-
-        renderList.push({
-          type: "electron",
-          depth: ep.z,
-          draw: () => {
-            // Radial glow
-            const glowSize = 9 * eScale;
-            const glow = ctx.createRadialGradient(ex, ey, 0, ex, ey, glowSize);
-            glow.addColorStop(0, hexToRgba(orbit.color, 0.7));
-            glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-            ctx.fillStyle = glow;
-            ctx.beginPath();
-            ctx.arc(ex, ey, glowSize, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Core dot
-            ctx.fillStyle = orbit.color;
-            ctx.beginPath();
-            ctx.arc(ex, ey, 3.8 * eScale, 0, Math.PI * 2);
-            ctx.fill();
-          },
-        });
-      });
-
-      // 3. Central Nucleus (fixed at depth=0)
-      renderList.push({
-        type: "nucleus",
-        depth: 0,
-        draw: () => {
-          const cx = width / 2;
-          const cy = height / 2;
-          const pulse = 1 + Math.sin(time * 2.2) * 0.035;
-
-          // Outer energy aura
-          const glowGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 40 * pulse);
-          glowGrad.addColorStop(0, "rgba(6, 182, 212, 0.28)");
-          glowGrad.addColorStop(0.5, "rgba(37, 99, 235, 0.08)");
-          glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-          ctx.fillStyle = glowGrad;
-          ctx.beginPath();
-          ctx.arc(cx, cy, 40 * pulse, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Central core sphere
-          ctx.fillStyle = "rgba(10, 24, 46, 0.9)";
-          ctx.strokeStyle = "rgba(6, 182, 212, 0.65)";
-          ctx.lineWidth = 1.8;
-          ctx.beginPath();
-          ctx.arc(cx, cy, 26 * pulse, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-
-          // Neon text "RN"
-          ctx.save();
-          ctx.font = `bold ${Math.round(18 * pulse)}px 'Courier New', Courier, monospace`;
-          ctx.fillStyle = "#06b6d4";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.shadowColor = "rgba(6, 182, 212, 0.9)";
-          ctx.shadowBlur = 12;
-          ctx.fillText("RN", cx, cy);
-          ctx.restore();
-        },
-      });
-
-      // ─── 4. Sort and Draw all renderable items ───────────────────────────
-      // Large Z values are drawn first (background), small Z values drawn last (foreground)
-      renderList.sort((a, b) => b.depth - a.depth);
-      renderList.forEach((item) => item.draw());
-
-      animId = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
-    };
-  }, [mode, isReducedMotion]);
+  if (!webglSupported) {
+    return <Fallback />;
+  }
 
   return (
     <div
-      ref={containerRef}
-      className={`w-full flex items-center justify-center relative overflow-hidden select-none ${className}`}
+      className={`w-full relative ${className}`}
       style={{ aspectRatio: "1 / 1" }}
+      aria-hidden="true"
     >
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full block relative z-10"
-        aria-label="RN Yazılım 3 Boyutlu Atom Modeli"
-      />
+      <Canvas
+        dpr={[1, 1.5]}
+        gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+        shadows={false}
+        camera={{ fov: 40, position: [0, 0.3, 6], near: 0.1, far: 50 }}
+        style={{ background: "transparent" }}
+      >
+        <Scene />
+      </Canvas>
     </div>
   );
 };
