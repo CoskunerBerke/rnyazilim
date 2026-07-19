@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import { usePerformanceMode } from "@/components/context/PerformanceModeProvider";
 
 interface Point3D {
@@ -19,10 +19,6 @@ export const DigitalCore: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { mode, isReducedMotion } = usePerformanceMode();
 
-  // Mouse position tracking for parallax camera rotation
-  const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -38,7 +34,6 @@ export const DigitalCore: React.FC = () => {
     const resizeCanvas = () => {
       if (!canvas || !containerRef.current) return;
       const dpr = window.devicePixelRatio || 1;
-      // Limit resolution on low performance mode
       const resolutionScale = mode === "low" ? 1 : Math.min(dpr, 1.5);
       
       width = containerRef.current.clientWidth;
@@ -52,20 +47,71 @@ export const DigitalCore: React.FC = () => {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
-    // Track mouse coordinates over window to rotate camera
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      
-      // Normalized coordinates from -0.5 to 0.5 relative to canvas center
-      const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-      const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
-      
-      mouseRef.current.targetX = x * 0.6; // camera angle limit
-      mouseRef.current.targetY = y * 0.6;
+    // Interaction variables
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    let rotationX = 0.2; // initial tilt
+    let rotationY = 0;
+
+    let hoverX = 0;
+    let hoverY = 0;
+
+    let targetRotX = 0.2;
+    let targetRotY = 0;
+
+    let camX = 0.2;
+    let camY = 0;
+
+    // Pointer events for dragging
+    const handlePointerDown = (e: PointerEvent) => {
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      canvas.setPointerCapture(e.pointerId);
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    const handlePointerMove = (e: PointerEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      if (isDragging) {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        rotationY += dx * 0.008; // Rotate around Y based on X delta
+        rotationX += dy * 0.008; // Rotate around X based on Y delta
+
+        // Limit vertical rotation to prevent flipping upside down
+        rotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, rotationX));
+
+        startX = e.clientX;
+        startY = e.clientY;
+      } else {
+        // Gentle hover parallax offset relative to center
+        const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+        const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+        hoverY = x * 0.35;
+        hoverX = y * 0.35;
+      }
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      isDragging = false;
+      canvas.releasePointerCapture(e.pointerId);
+    };
+
+    const handlePointerLeave = () => {
+      hoverX = 0;
+      hoverY = 0;
+    };
+
+    canvas.addEventListener("pointerdown", handlePointerDown);
+    canvas.addEventListener("pointermove", handlePointerMove);
+    canvas.addEventListener("pointerup", handlePointerUp);
+    canvas.addEventListener("pointercancel", handlePointerUp);
+    canvas.addEventListener("pointerleave", handlePointerLeave);
 
     // Initialize 3D nodes
     const nodeCount = mode === "high" ? 28 : mode === "medium" ? 16 : 8;
@@ -73,7 +119,6 @@ export const DigitalCore: React.FC = () => {
     const sphereRadius = 130;
 
     for (let i = 0; i < nodeCount; i++) {
-      // Position points randomly on a sphere surface or inside
       const u = Math.random();
       const v = Math.random();
       const theta = u * 2.0 * Math.PI;
@@ -88,10 +133,9 @@ export const DigitalCore: React.FC = () => {
         x,
         y,
         z,
-        // Small random movement velocities
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        vz: (Math.random() - 0.5) * 0.3,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        vz: (Math.random() - 0.5) * 0.25,
         size: 2 + Math.random() * 3,
       });
     }
@@ -99,9 +143,9 @@ export const DigitalCore: React.FC = () => {
     // Concentric ring segments in 3D
     const ringRadii = [90, 140, 190];
     const ringRotations = [
-      { rx: 0.8, ry: 0.5, speed: 0.003 },  // Ring 1 angles
-      { rx: -0.6, ry: 0.8, speed: -0.002 }, // Ring 2 angles
-      { rx: 0.2, ry: 1.2, speed: 0.004 },   // Ring 3 angles
+      { rx: 0.8, ry: 0.5, speed: 0.003 },
+      { rx: -0.6, ry: 0.8, speed: -0.002 },
+      { rx: 0.2, ry: 1.2, speed: 0.004 },
     ];
     let ringAngles = [0, 0, 0];
 
@@ -145,16 +189,23 @@ export const DigitalCore: React.FC = () => {
     // Main animation loop
     const renderLoop = () => {
       if (isReducedMotion) {
-        // Just draw a static frame and stop loop
-        drawFrame(0, 0);
+        drawFrame(0.2, 0);
         return;
       }
 
       time += 0.008;
 
-      // Smooth interpolation for mouse parallax (spring effect)
-      mouseRef.current.x += (mouseRef.current.targetX - mouseRef.current.x) * 0.08;
-      mouseRef.current.y += (mouseRef.current.targetY - mouseRef.current.y) * 0.08;
+      // Slowly increment base rotation if not actively dragging
+      if (!isDragging) {
+        rotationY += 0.0015;
+      }
+
+      // Smooth camera interpolation
+      targetRotY = rotationY + hoverY;
+      targetRotX = rotationX + hoverX;
+
+      camY += (targetRotY - camY) * 0.1;
+      camX += (targetRotX - camX) * 0.1;
 
       // Update node positions inside sphere boundary
       nodes.forEach((n) => {
@@ -162,7 +213,6 @@ export const DigitalCore: React.FC = () => {
         n.y += n.vy;
         n.z += n.vz;
 
-        // Bounce back if node gets out of bounds
         const d = Math.sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
         if (d > sphereRadius * 1.3) {
           n.vx *= -1;
@@ -173,9 +223,9 @@ export const DigitalCore: React.FC = () => {
 
       // Update ambient stars
       stars.forEach((s) => {
-        s.z -= 0.15; // slow translation forward
+        s.z -= 0.15;
         if (s.z < -250) {
-          s.z = 250; // wrap around
+          s.z = 250;
         }
       });
 
@@ -184,7 +234,7 @@ export const DigitalCore: React.FC = () => {
         ringAngles[idx] += r.speed;
       });
 
-      drawFrame(mouseRef.current.x, mouseRef.current.y);
+      drawFrame(camY, camX);
 
       animationFrameId = requestAnimationFrame(renderLoop);
     };
@@ -193,7 +243,6 @@ export const DigitalCore: React.FC = () => {
     const drawFrame = (camAngleY: number, camAngleX: number) => {
       ctx.clearRect(0, 0, width, height);
 
-      // Create a depth list for painters algorithm
       interface Renderable {
         type: "node" | "line" | "star" | "ring-segment" | "monogram";
         depth: number;
@@ -203,16 +252,14 @@ export const DigitalCore: React.FC = () => {
 
       // 1. Project nodes and build connections
       const projectedNodes = nodes.map((n) => {
-        // Auto rotate nodes slowly over time
         let p = rotY(n.x, n.y, n.z, time * 0.15);
         p = rotX(p.x, p.y, p.z, time * 0.1);
 
-        // Apply camera parallax
+        // Apply camera rotations
         p = rotY(p.x, p.y, p.z, camAngleY);
         p = rotX(p.x, p.y, p.z, camAngleX);
 
-        // Perspective scaling
-        const scale = focalLength / (focalLength + p.z + 250); // offset camera z by 250
+        const scale = focalLength / (focalLength + p.z + 250);
         const projX = p.x * scale + width / 2;
         const projY = p.y * scale + height / 2;
 
@@ -227,14 +274,12 @@ export const DigitalCore: React.FC = () => {
           draw: () => {
             ctx.beginPath();
             ctx.arc(pn.x, pn.y, pn.raw.size! * pn.scale, 0, Math.PI * 2);
-            // Glowing cyan color for front nodes, dimmer blue for back
             const alpha = Math.max(0.2, Math.min(1.0, pn.scale * 1.2));
             ctx.fillStyle = pn.depth < 0 
-              ? `rgba(6, 182, 212, ${alpha})` // cyan for close
-              : `rgba(37, 99, 235, ${alpha * 0.7})`; // blue for far
+              ? `rgba(6, 182, 212, ${alpha})`
+              : `rgba(37, 99, 235, ${alpha * 0.7})`;
             ctx.fill();
 
-            // Glow ring for top nodes
             if (pn.depth < -30 && mode === "high") {
               ctx.beginPath();
               ctx.arc(pn.x, pn.y, pn.raw.size! * pn.scale * 2.5, 0, Math.PI * 2);
@@ -246,7 +291,7 @@ export const DigitalCore: React.FC = () => {
         });
       });
 
-      // Add connections to render list (lines between close nodes)
+      // Add connections to render list
       for (let i = 0; i < projectedNodes.length; i++) {
         for (let j = i + 1; j < projectedNodes.length; j++) {
           const pi = projectedNodes[i];
@@ -268,7 +313,6 @@ export const DigitalCore: React.FC = () => {
                 ctx.beginPath();
                 ctx.moveTo(pi.x, pi.y);
                 ctx.lineTo(pj.x, pj.y);
-                // Create a cyan/violet gradient for connections
                 const grad = ctx.createLinearGradient(pi.x, pi.y, pj.x, pj.y);
                 grad.addColorStop(0, `rgba(6, 182, 212, ${alpha})`);
                 grad.addColorStop(1, `rgba(139, 92, 246, ${alpha})`);
@@ -288,15 +332,12 @@ export const DigitalCore: React.FC = () => {
         const currentAngle = ringAngles[ringIdx];
 
         for (let i = 0; i < segments; i++) {
-          // Draw dashed orbital lines
           const angle1 = (i / segments) * Math.PI * 2;
-          const angle2 = ((i + 0.65) / segments) * Math.PI * 2; // gaps in ring
+          const angle2 = ((i + 0.65) / segments) * Math.PI * 2;
 
-          // Coordinates on local ring plane
           let p1 = { x: radius * Math.cos(angle1), y: radius * Math.sin(angle1), z: 0 };
           let p2 = { x: radius * Math.cos(angle2), y: radius * Math.sin(angle2), z: 0 };
 
-          // Rotate local ring coordinate by its custom tilt angles
           let r1 = rotZ(p1.x, p1.y, p1.z, currentAngle);
           r1 = rotX(r1.x, r1.y, r1.z, ringSet.rx);
           p1 = rotY(r1.x, r1.y, r1.z, ringSet.ry);
@@ -305,14 +346,12 @@ export const DigitalCore: React.FC = () => {
           r2 = rotX(r2.x, r2.y, r2.z, ringSet.rx);
           p2 = rotY(r2.x, r2.y, r2.z, ringSet.ry);
 
-          // Apply camera angles
           let c1 = rotX(p1.x, p1.y, p1.z, camAngleX);
           p1 = rotY(c1.x, c1.y, c1.z, camAngleY);
 
           let c2 = rotX(p2.x, p2.y, p2.z, camAngleX);
           p2 = rotY(c2.x, c2.y, c2.z, camAngleY);
 
-          // Perspective project
           const s1 = focalLength / (focalLength + p1.z + 250);
           const s2 = focalLength / (focalLength + p2.z + 250);
 
@@ -333,8 +372,8 @@ export const DigitalCore: React.FC = () => {
               ctx.lineTo(x2, y2);
               const opacity = Math.max(0.05, Math.min(0.5, avgScale * 0.8));
               ctx.strokeStyle = avgDepth < 0 
-                ? `rgba(6, 182, 212, ${opacity})` // cyan for front
-                : `rgba(37, 99, 235, ${opacity * 0.6})`; // blue for back
+                ? `rgba(6, 182, 212, ${opacity})`
+                : `rgba(37, 99, 235, ${opacity * 0.6})`;
               ctx.lineWidth = (ringIdx === 1 ? 1.5 : 0.8) * avgScale;
               ctx.stroke();
             },
@@ -366,19 +405,17 @@ export const DigitalCore: React.FC = () => {
         }
       });
 
-      // 4. Central Monogram core symbol (drawn exactly at 3D center z=0 depth)
+      // 4. Central Monogram core symbol (spaced and balanced)
       renderList.push({
         type: "monogram",
-        depth: 0, // exactly at center depth
+        depth: 0,
         draw: () => {
           ctx.save();
           ctx.translate(width / 2, height / 2);
 
-          // Pulsing scale factor for organic core heartbeats
           const pulse = 1 + Math.sin(time * 2) * 0.05;
           ctx.scale(pulse, pulse);
 
-          // Glowing central glow gradient
           const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 45);
           glow.addColorStop(0, "rgba(6, 182, 212, 0.2)");
           glow.addColorStop(0.5, "rgba(37, 99, 235, 0.05)");
@@ -388,36 +425,33 @@ export const DigitalCore: React.FC = () => {
           ctx.arc(0, 0, 45, 0, Math.PI * 2);
           ctx.fill();
 
-          // Stylized glowing central "RN" shape
           ctx.beginPath();
-          ctx.strokeStyle = "rgba(6, 182, 212, 0.8)";
+          ctx.strokeStyle = "rgba(6, 182, 212, 0.85)";
           ctx.lineWidth = 3;
           ctx.shadowBlur = 15;
           ctx.shadowColor = "rgba(6, 182, 212, 0.8)";
           
-          // Draw "R" shape
-          ctx.beginPath();
-          ctx.moveTo(-20, 20);
-          ctx.lineTo(-20, -20);
-          ctx.lineTo(-5, -20);
-          ctx.bezierCurveTo(5, -20, 5, -5, -5, -5);
-          ctx.lineTo(-20, -5);
-          ctx.moveTo(-8, -5);
-          ctx.lineTo(8, 20);
+          // Draw "R" shape on left
+          ctx.moveTo(-26, 16);
+          ctx.lineTo(-26, -16);
+          ctx.lineTo(-12, -16);
+          ctx.bezierCurveTo(-4, -16, -4, -2, -12, -2);
+          ctx.lineTo(-26, -2);
+          ctx.moveTo(-18, -2);
+          ctx.lineTo(-8, 16);
           
-          // Draw "N" shape
-          ctx.moveTo(1, 20);
-          ctx.lineTo(1, -20);
-          ctx.lineTo(16, 20);
-          ctx.lineTo(16, -20);
+          // Draw "N" shape on right (completely separate)
+          ctx.moveTo(6, 16);
+          ctx.lineTo(6, -16);
+          ctx.lineTo(24, 16);
+          ctx.lineTo(24, -16);
 
           ctx.stroke();
           ctx.restore();
         },
       });
 
-      // 5. SORT BY DEPTH (Painters Algorithm: back to front)
-      // High Z is further back in 3D coordinate system, low Z is closer
+      // 5. SORT BY DEPTH
       renderList.sort((a, b) => b.depth - a.depth);
 
       // 6. DRAW ALL
@@ -429,7 +463,11 @@ export const DigitalCore: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", resizeCanvas);
-      window.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("pointerdown", handlePointerDown);
+      canvas.removeEventListener("pointermove", handlePointerMove);
+      canvas.removeEventListener("pointerup", handlePointerUp);
+      canvas.removeEventListener("pointercancel", handlePointerUp);
+      canvas.removeEventListener("pointerleave", handlePointerLeave);
     };
   }, [mode, isReducedMotion]);
 
@@ -440,7 +478,7 @@ export const DigitalCore: React.FC = () => {
     >
       <canvas
         ref={canvasRef}
-        className="w-full h-full block relative z-10 cursor-grab active:cursor-grabbing"
+        className="w-full h-full block relative z-10 cursor-grab active:cursor-grabbing touch-none"
         aria-label="RN Yazılım Digital Core: etkileşimli, 3 boyutlu soyut yapay zeka ve yazılım ağ yapısı."
       />
     </div>
