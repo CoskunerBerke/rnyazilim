@@ -73,35 +73,18 @@ export const ContactSection: React.FC = () => {
 
             {/* Abstract World Connectivity Map */}
             <div className="w-full h-44 rounded-xl border border-white/5 bg-slate-900/20 backdrop-blur-sm relative overflow-hidden flex items-center justify-center">
-              {/* Map background grids */}
-              <svg className="absolute inset-0 w-full h-full text-white/[0.02]" xmlns="http://www.w3.org/2000/svg">
-                <pattern id="mapGrid" width="16" height="16" patternUnits="userSpaceOnUse">
-                  <rect width="100%" height="100%" fill="none" stroke="currentColor" strokeWidth="0.5" />
-                </pattern>
-                <rect width="100%" height="100%" fill="url(#mapGrid)" />
-              </svg>
-              {/* Connection paths */}
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 176" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Türkiye Center hotspot */}
-                <circle cx="200" cy="80" r="4" fill="#3b82f6" className="animate-pulse" />
-                <circle cx="200" cy="80" r="12" stroke="#3b82f6" strokeWidth="1" strokeOpacity="0.4" className="animate-ping" style={{ animationDuration: "2s" }} />
-
-                {/* Europe connection node */}
-                <circle cx="150" cy="60" r="3" fill="#06b6d4" />
-                {/* Middle East connection node */}
-                <circle cx="250" cy="100" r="3" fill="#8b5cf6" />
-                {/* America connection node */}
-                <circle cx="80" cy="70" r="3" fill="#06b6d4" />
-                
-                {/* Pulsing pathways */}
-                <path d="M 200 80 L 150 60" stroke="#06b6d4" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4" />
-                <path d="M 200 80 L 250 100" stroke="#8b5cf6" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4" />
-                <path d="M 200 80 L 80 70" stroke="#3b82f6" strokeWidth="1" strokeOpacity="0.2" strokeDasharray="6 4" />
-              </svg>
-              <div className="absolute bottom-3 left-4 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-primary-light animate-ping" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-text-gray/80 font-mono">RN_CLOUD_NODE_TR</span>
-              </div>
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d195884.3004313337!2d32.622681530932454!3d39.9032598687702!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14d347d520e3621f%3A0xbd12a8524d22080!2sAnkara%2C%20Turkey!5e0!3m2!1sen!2str!4v1716300000000!5m2!1sen!2str"
+                width="100%"
+                height="100%"
+                style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) grayscale(80%) contrast(95%) opacity(0.75)" }}
+                allowFullScreen={false}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="RN Yazılım Ankara Ofisi Haritası"
+                className="absolute inset-0 w-full h-full"
+              />
+              <div className="absolute inset-0 border border-white/5 rounded-xl pointer-events-none" />
             </div>
           </div>
 

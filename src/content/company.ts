@@ -206,21 +206,6 @@ export const projects: Project[] = [
     imageUrl: "/images/project-reservation.png",
   },
   {
-    slug: "mobil-uygulama",
-    title: "Akıllı Ev ve IOT Kontrol Uygulaması",
-    category: "Mobil Uygulama",
-    categorySlug: "mobil",
-    challenge: "Akıllı ev donanımları üreten bir markanın, cihazları kontrol etmek için kullanılan mevcut mobil uygulamasının sık sık bağlantısının kopması ve yavaş çalışması.",
-    solution: "React Native ve Bluetooth Low Energy (BLE) / WebSockets protokolleri kullanılarak baştan yazılan, düşük gecikmeli ve yüksek performanslı iOS/Android mobil uygulaması.",
-    results: [
-      "Cihaz bağlantı süresi 4 saniyeden 200 milisaniyeye indirildi.",
-      "Google Play ve App Store puanı 2.4'ten 4.6'ya çıktı.",
-      "Uygulama çökme oranları %0.1'in altına düşürüldü."
-    ],
-    technologies: ["React Native", "TypeScript", "WebSockets", "BLE API", "Redux Toolkit"],
-    imageUrl: "/images/project-mobile.png",
-  },
-  {
     slug: "avs-servis",
     title: "AVS Filo ve Servis Hizmetleri",
     category: "Web Tasarımı & Kurumsal Arayüz",
