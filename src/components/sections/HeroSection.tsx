@@ -5,21 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import Button from "../ui/Button";
-import dynamic from "next/dynamic";
-
-// Client-side dynamic import of 3D DigitalCore to avoid SSR mismatch
-const DigitalCore = dynamic(() => import("../ui/DigitalCore"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full min-h-[350px] sm:min-h-[450px] flex items-center justify-center relative z-10">
-      {/* Static Fallback vector RN monogram while loading */}
-      <svg className="w-24 h-24 text-primary-light/30 animate-pulse" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5">
-        <path d="M25 75 V25 H45 C58 25, 58 45, 45 45 H25 M40 45 L58 75" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M68 75 V25 L88 75 V25" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-  )
-});
+import AtomLogo from "../ui/AtomLogo";
 
 export const HeroSection: React.FC = () => {
   return (
@@ -104,16 +90,16 @@ export const HeroSection: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* Interactive Technology Visual */}
+          {/* Atom Animation Visual */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
+            transition={{ duration: 1.0, delay: 0.3, type: "spring", stiffness: 60 }}
             className="lg:col-span-5 flex items-center justify-center w-full relative"
           >
-            {/* Ambient radial backing glow under canvas */}
-            <div className="absolute inset-0 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-            <DigitalCore />
+            {/* Soft ambient radial glow behind atom */}
+            <div className="absolute inset-0 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
+            <AtomLogo className="w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] lg:w-[420px] lg:h-[420px] xl:w-[460px] xl:h-[460px]" />
           </motion.div>
         </div>
       </div>
