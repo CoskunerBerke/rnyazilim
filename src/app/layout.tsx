@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { PerformanceModeProvider } from "@/components/context/PerformanceModeProvider";
 import "./globals.css";
 import { companyInfo } from "@/content/company";
 
@@ -90,13 +91,15 @@ export default function RootLayout({
           İçeriğe Atla
         </a>
 
-        <Header />
-        
-        <main id="main-content" className="flex-grow pt-[72px] md:pt-[88px] outline-none">
-          {children}
-        </main>
-        
-        <Footer />
+        <PerformanceModeProvider>
+          <Header />
+          
+          <main id="main-content" className="flex-grow pt-[72px] md:pt-[88px] outline-none">
+            {children}
+          </main>
+          
+          <Footer />
+        </PerformanceModeProvider>
       </body>
     </html>
   );

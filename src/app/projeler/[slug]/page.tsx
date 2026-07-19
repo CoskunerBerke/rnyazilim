@@ -201,8 +201,98 @@ const ProjectMockup: React.FC<{ slug: string }> = ({ slug }) => {
           </div>
         </div>
       );
+    case "avs-servis":
+      return (
+        <div className="w-full h-64 bg-slate-900 border border-white/10 rounded-2xl flex flex-col p-6 relative overflow-hidden shadow-2xl">
+          {/* Browser header */}
+          <div className="flex items-center gap-2 pb-4 border-b border-white/5">
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500/60" />
+            <span className="w-3.5 h-3.5 rounded-full bg-yellow-500/60" />
+            <span className="w-3.5 h-3.5 rounded-full bg-emerald-500/60" />
+            <div className="h-5 bg-white/5 rounded px-3 w-40 text-xs text-text-gray/50 flex items-center justify-center font-mono ml-4">
+              avsservis.com.tr
+            </div>
+          </div>
+          {/* Fleet tracker details */}
+          <div className="flex-grow flex flex-col gap-4 justify-center py-4 relative z-10">
+            <span className="text-xs font-bold text-accent-cyan tracking-wider">AVS LOJİSTİK VE FİLO YÖNETİMİ</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/5 p-3 rounded-lg border border-white/5 flex items-center gap-3">
+                <span className="text-2xl">🚚</span>
+                <div className="flex flex-col">
+                  <span className="text-xs text-text-light font-bold">142 Araç</span>
+                  <span className="text-[9px] text-text-gray">Sevk Edildi</span>
+                </div>
+              </div>
+              <div className="bg-white/5 p-3 rounded-lg border border-white/5 flex items-center gap-3">
+                <span className="text-2xl">📍</span>
+                <div className="flex flex-col">
+                  <span className="text-xs text-text-light font-bold">Rota Takibi</span>
+                  <span className="text-[9px] text-emerald-400">Canlı Bağlantı</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    case "quattro-garaj":
+      return (
+        <div className="w-full h-64 bg-slate-900 border border-white/10 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+          {/* Dashboard Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <span className="font-plus-jakarta font-bold text-xs text-accent-cyan tracking-wider">QUATTRO PERFORMANCE</span>
+            <span className="text-[10px] text-text-gray font-mono">STATUS: DYNO_READY</span>
+          </div>
+          {/* Car service parameters */}
+          <div className="flex-grow flex flex-col gap-3 justify-center py-3">
+            <div className="bg-white/5 p-3 rounded-lg border border-white/5 flex justify-between items-center">
+              <span className="text-xs text-text-light">🚗 Porsche 911 Stage 2 Tuning</span>
+              <span className="text-xs text-emerald-400 font-bold font-mono">Tamamlandı</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                <span className="text-[8px] text-text-gray block uppercase tracking-wider">HP BOOST</span>
+                <span className="text-sm font-bold text-text-light font-mono">+120 HP</span>
+              </div>
+              <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                <span className="text-[8px] text-text-gray block uppercase tracking-wider">TORQUE BOOST</span>
+                <span className="text-sm font-bold text-accent-cyan font-mono">+150 NM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    case "dent-liart":
+      return (
+        <div className="w-full h-64 bg-slate-900 border border-white/10 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+          {/* Clinic layout */}
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <span className="text-xs font-bold text-text-light">DENT LIART DİŞ KLİNİĞİ</span>
+            <span className="text-[10px] text-primary-light font-mono">DENTİST_PORTAL</span>
+          </div>
+          <div className="flex-grow flex flex-col gap-4 justify-center py-3">
+            <div className="bg-white/5 p-3 rounded-lg border border-white/5 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-lg">
+                👨‍⚕️
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-text-light font-bold">Dr. Hakan Demir</span>
+                <span className="text-[10px] text-text-gray">Ortodonti Uzmanı</span>
+              </div>
+            </div>
+            <div className="bg-white/5 p-2 rounded-lg border border-white/5 flex items-center justify-between text-xs text-text-gray">
+              <span>Sıradaki Boş Saat: Salı 10:30</span>
+              <span className="text-emerald-400 font-bold cursor-pointer hover:underline">Hızlı Randevu</span>
+            </div>
+          </div>
+        </div>
+      );
     default:
-      return <div className="w-full h-64 bg-slate-900 border border-white/10 rounded-2xl flex items-center justify-center text-text-gray">Görsel Yüklenemedi</div>;
+      return (
+        <div className="w-full h-64 bg-slate-900 border border-white/10 rounded-2xl flex items-center justify-center text-text-gray p-6">
+          <span className="text-xs font-mono">Sistem Ön İzleme Hazırlanıyor...</span>
+        </div>
+      );
   }
 };
 
@@ -307,7 +397,7 @@ export default async function ProjectDetailPage({ params }: Props) {
             </p>
             <Link href={`/iletisim?proje=${project.slug}`}>
               <Button variant="primary" rightIcon={<ArrowRight className="h-4.5 w-4.5" />}>
-                Bize Projenizi Anlatın
+                Ücretsiz Görüşme Planla
               </Button>
             </Link>
           </Card>
