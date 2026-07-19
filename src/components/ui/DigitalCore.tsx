@@ -3,17 +3,6 @@
 import React, { useRef, useEffect } from "react";
 import { usePerformanceMode } from "@/components/context/PerformanceModeProvider";
 
-interface Point3D {
-  x: number;
-  y: number;
-  z: number;
-  vx: number;
-  vy: number;
-  vz: number;
-  color?: string;
-  size?: number;
-}
-
 export const DigitalCore: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -21,453 +10,255 @@ export const DigitalCore: React.FC = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animationFrameId: number;
-    let width = 0;
-    let height = 0;
-    
-    // Set sizes based on container
-    const resizeCanvas = () => {
-      if (!canvas || !containerRef.current) return;
-      const dpr = window.devicePixelRatio || 1;
-      const resolutionScale = mode === "low" ? 1 : Math.min(dpr, 1.5);
-      
-      width = containerRef.current.clientWidth;
-      height = containerRef.current.clientHeight || 500;
-      
-      canvas.width = width * resolutionScale;
-      canvas.height = height * resolutionScale;
-      ctx.scale(resolutionScale, resolutionScale);
+    let animId: number;
+    let W = 0;
+    let H = 0;
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = container.clientWidth;
+      H = container.clientHeight || 500;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+    resize();
+    window.addEventListener("resize", resize);
 
-    // Interaction variables
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-
-    let rotationX = 0.2; // initial tilt
-    let rotationY = 0;
-
-    let hoverX = 0;
-    let hoverY = 0;
-
-    let targetRotX = 0.2;
-    let targetRotY = 0;
-
-    let camX = 0.2;
-    let camY = 0;
-
-    // Pointer events for dragging
-    const handlePointerDown = (e: PointerEvent) => {
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      canvas.setPointerCapture(e.pointerId);
-    };
-
-    const handlePointerMove = (e: PointerEvent) => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-
-      if (isDragging) {
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-
-        rotationY += dx * 0.008; // Rotate around Y based on X delta
-        rotationX += dy * 0.008; // Rotate around X based on Y delta
-
-        // Limit vertical rotation to prevent flipping upside down
-        rotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, rotationX));
-
-        startX = e.clientX;
-        startY = e.clientY;
-      } else {
-        // Gentle hover parallax offset relative to center
-        const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-        const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
-        hoverY = x * 0.35;
-        hoverX = y * 0.35;
-      }
-    };
-
-    const handlePointerUp = (e: PointerEvent) => {
-      isDragging = false;
-      canvas.releasePointerCapture(e.pointerId);
-    };
-
-    const handlePointerLeave = () => {
-      hoverX = 0;
-      hoverY = 0;
-    };
-
-    canvas.addEventListener("pointerdown", handlePointerDown);
-    canvas.addEventListener("pointermove", handlePointerMove);
-    canvas.addEventListener("pointerup", handlePointerUp);
-    canvas.addEventListener("pointercancel", handlePointerUp);
-    canvas.addEventListener("pointerleave", handlePointerLeave);
-
-    // Initialize 3D nodes
-    const nodeCount = mode === "high" ? 28 : mode === "medium" ? 16 : 8;
-    const nodes: Point3D[] = [];
-    const sphereRadius = 130;
-
-    for (let i = 0; i < nodeCount; i++) {
-      const u = Math.random();
-      const v = Math.random();
-      const theta = u * 2.0 * Math.PI;
-      const phi = Math.acos(2.0 * v - 1.0);
-      
-      const r = sphereRadius * (0.6 + 0.4 * Math.random());
-      const x = r * Math.sin(phi) * Math.cos(theta);
-      const y = r * Math.sin(phi) * Math.sin(theta);
-      const z = r * Math.cos(phi);
-
-      nodes.push({
-        x,
-        y,
-        z,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25,
-        vz: (Math.random() - 0.5) * 0.25,
-        size: 2 + Math.random() * 3,
-      });
-    }
-
-    // Concentric ring segments in 3D
-    const ringRadii = [90, 140, 190];
-    const ringRotations = [
-      { rx: 0.8, ry: 0.5, speed: 0.003 },
-      { rx: -0.6, ry: 0.8, speed: -0.002 },
-      { rx: 0.2, ry: 1.2, speed: 0.004 },
+    // ── Orbital definitions ─────────────────────────────────────────────
+    // Each orbit: rx/ry (semi-axes), tiltX (x-axis tilt in rad), tiltZ (z rotation),
+    // speed (radians per frame), electronColor
+    const orbits = [
+      { rx: 110, ry: 38, tiltX: 0,            tiltZ: 0,           speed: 0.022, color: "#06b6d4", phase: 0 },
+      { rx: 110, ry: 38, tiltX: Math.PI / 3,  tiltZ: Math.PI / 3, speed: 0.018, color: "#3b82f6", phase: Math.PI * 0.66 },
+      { rx: 110, ry: 38, tiltX: -Math.PI / 3, tiltZ: -Math.PI / 3,speed: 0.025, color: "#8b5cf6", phase: Math.PI * 1.33 },
     ];
-    let ringAngles = [0, 0, 0];
 
-    // Ambient stars background cloud
-    const starCount = mode === "high" ? 60 : mode === "medium" ? 30 : 0;
-    const stars: Point3D[] = [];
-    for (let i = 0; i < starCount; i++) {
-      stars.push({
-        x: (Math.random() - 0.5) * 500,
-        y: (Math.random() - 0.5) * 500,
-        z: (Math.random() - 0.5) * 500,
-        vx: 0,
-        vy: 0,
-        vz: (Math.random() - 0.5) * 0.05,
+    const electronAngles = orbits.map((o) => o.phase);
+
+    // ── Draw a single tilted ellipse ────────────────────────────────────
+    const drawOrbit = (
+      cx: number,
+      cy: number,
+      rx: number,
+      ry: number,
+      tiltX: number,
+      tiltZ: number,
+      alpha: number,
+      color: string
+    ) => {
+      const steps = 120;
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const a = (i / steps) * Math.PI * 2;
+        // Point on flat ellipse
+        let x = rx * Math.cos(a);
+        let y = ry * Math.sin(a);
+        let z = 0;
+
+        // Rotate around X axis by tiltX
+        const cosX = Math.cos(tiltX);
+        const sinX = Math.sin(tiltX);
+        const y1 = y * cosX - z * sinX;
+        const z1 = y * sinX + z * cosX;
+        y = y1;
+        z = z1;
+
+        // Rotate around Z axis by tiltZ  
+        const cosZ = Math.cos(tiltZ);
+        const sinZ = Math.sin(tiltZ);
+        const x2 = x * cosZ - y * sinZ;
+        const y2 = x * sinZ + y * cosZ;
+        x = x2;
+        y = y2;
+
+        // Simple depth-based opacity (z ranges roughly -ry..+ry after tilt)
+        if (i === 0) ctx.moveTo(cx + x, cy + y);
+        else ctx.lineTo(cx + x, cy + y);
+      }
+
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = color.replace(")", `, ${alpha})`).replace("rgb(", "rgba(").replace("#", "rgba(").replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/, (_m, r, g, b) =>
+        `rgba(${parseInt(r, 16)}, ${parseInt(g, 16)}, ${parseInt(b, 16)}`
+      );
+      // Simpler approach: just use a fixed rgba
+      ctx.strokeStyle = `rgba(6, 182, 212, ${alpha * 0.45})`;
+      if (color === "#3b82f6") ctx.strokeStyle = `rgba(59, 130, 246, ${alpha * 0.45})`;
+      if (color === "#8b5cf6") ctx.strokeStyle = `rgba(139, 92, 246, ${alpha * 0.45})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+    };
+
+    // ── Get electron 3D position on orbit ──────────────────────────────
+    const getElectronPos = (
+      cx: number,
+      cy: number,
+      rx: number,
+      ry: number,
+      tiltX: number,
+      tiltZ: number,
+      angle: number
+    ): { x: number; y: number; z: number } => {
+      let x = rx * Math.cos(angle);
+      let y = ry * Math.sin(angle);
+      let z = 0;
+
+      // Rotate around X
+      const cosX = Math.cos(tiltX);
+      const sinX = Math.sin(tiltX);
+      const y1 = y * cosX - z * sinX;
+      const z1 = y * sinX + z * cosX;
+      y = y1;
+      z = z1;
+
+      // Rotate around Z
+      const cosZ = Math.cos(tiltZ);
+      const sinZ = Math.sin(tiltZ);
+      const x2 = x * cosZ - y * sinZ;
+      const y2 = x * sinZ + y * cosZ;
+      x = x2;
+      y = y2;
+
+      return { x: cx + x, y: cy + y, z };
+    };
+
+    // ── Draw nucleus "RN" ───────────────────────────────────────────────
+    const drawNucleus = (cx: number, cy: number, pulse: number) => {
+      // Outer glow rings
+      const glowGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 38 + pulse * 4);
+      glowGrad.addColorStop(0, "rgba(6, 182, 212, 0.25)");
+      glowGrad.addColorStop(0.5, "rgba(37, 99, 235, 0.08)");
+      glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 38 + pulse * 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Nucleus circle
+      const nucGrad = ctx.createRadialGradient(cx - 6, cy - 6, 2, cx, cy, 28);
+      nucGrad.addColorStop(0, "rgba(14, 165, 233, 0.35)");
+      nucGrad.addColorStop(0.6, "rgba(30, 64, 175, 0.18)");
+      nucGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = nucGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+      ctx.fill();
+
+      // "RN" text
+      ctx.save();
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = "rgba(6, 182, 212, 0.9)";
+      ctx.fillStyle = "rgba(6, 182, 212, 0.95)";
+      ctx.font = `bold ${Math.round(22 + pulse * 1)}px 'Courier New', monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("RN", cx, cy);
+      ctx.restore();
+    };
+
+    // ── Main render loop ────────────────────────────────────────────────
+    let t = 0;
+
+    const render = () => {
+      ctx.clearRect(0, 0, W, H);
+
+      const cx = W / 2;
+      const cy = H / 2;
+
+      const pulse = Math.sin(t * 1.8) * 0.5 + 0.5; // 0..1
+
+      // Advance electron angles
+      orbits.forEach((orb, i) => {
+        electronAngles[i] += orb.speed;
       });
+
+      // Collect electrons with depth for painter's sort
+      const electrons: { x: number; y: number; z: number; color: string; i: number }[] = [];
+      orbits.forEach((orb, i) => {
+        const pos = getElectronPos(cx, cy, orb.rx, orb.ry, orb.tiltX, orb.tiltZ, electronAngles[i]);
+        electrons.push({ ...pos, color: orb.color, i });
+      });
+
+      // Sort by z: draw farther ones first
+      const sorted = [...electrons].sort((a, b) => a.z - b.z);
+
+      // Draw back-half orbits + electrons
+      orbits.forEach((orb, i) => {
+        drawOrbit(cx, cy, orb.rx, orb.ry, orb.tiltX, orb.tiltZ, 1, orb.color);
+      });
+
+      // Draw back electrons (z < 0 = behind nucleus)
+      sorted.filter((e) => e.z < 0).forEach((e) => {
+        drawElectron(e.x, e.y, e.color, 0.55 + pulse * 0.1);
+      });
+
+      // Draw nucleus on top of back electrons
+      drawNucleus(cx, cy, pulse);
+
+      // Draw front electrons (z >= 0 = in front of nucleus)
+      sorted.filter((e) => e.z >= 0).forEach((e) => {
+        drawElectron(e.x, e.y, e.color, 0.9 + pulse * 0.1);
+      });
+
+      t += 0.016;
+      animId = requestAnimationFrame(render);
+    };
+
+    // ── Draw electron particle ──────────────────────────────────────────
+    const drawElectron = (x: number, y: number, color: string, alpha: number) => {
+      // Trail / glow
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, 10);
+      if (color === "#06b6d4") {
+        grad.addColorStop(0, `rgba(6, 182, 212, ${alpha * 0.5})`);
+        grad.addColorStop(1, "rgba(6, 182, 212, 0)");
+        ctx.fillStyle = grad;
+      } else if (color === "#3b82f6") {
+        grad.addColorStop(0, `rgba(59, 130, 246, ${alpha * 0.5})`);
+        grad.addColorStop(1, "rgba(59, 130, 246, 0)");
+        ctx.fillStyle = grad;
+      } else {
+        grad.addColorStop(0, `rgba(139, 92, 246, ${alpha * 0.5})`);
+        grad.addColorStop(1, "rgba(139, 92, 246, 0)");
+        ctx.fillStyle = grad;
+      }
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core dot
+      ctx.save();
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = color;
+      if (color === "#06b6d4") ctx.fillStyle = `rgba(6, 182, 212, ${alpha})`;
+      else if (color === "#3b82f6") ctx.fillStyle = `rgba(59, 130, 246, ${alpha})`;
+      else ctx.fillStyle = `rgba(139, 92, 246, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+
+    if (!isReducedMotion) {
+      render();
+    } else {
+      // Static frame
+      const cx = W / 2;
+      const cy = H / 2;
+      orbits.forEach((orb) => drawOrbit(cx, cy, orb.rx, orb.ry, orb.tiltX, orb.tiltZ, 1, orb.color));
+      drawNucleus(cx, cy, 0.5);
     }
-
-    // 3D rotation math helper functions
-    const rotX = (x: number, y: number, z: number, angle: number) => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      return { x, y: y * cos - z * sin, z: y * sin + z * cos };
-    };
-
-    const rotY = (x: number, y: number, z: number, angle: number) => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      return { x: x * cos + z * sin, y, z: -x * sin + z * cos };
-    };
-
-    const rotZ = (x: number, y: number, z: number, angle: number) => {
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      return { x: x * cos - y * sin, y: x * sin + y * cos, z };
-    };
-
-    // Camera parameters
-    const focalLength = 300;
-    let time = 0;
-
-    // Main animation loop
-    const renderLoop = () => {
-      if (isReducedMotion) {
-        drawFrame(0.2, 0);
-        return;
-      }
-
-      time += 0.008;
-
-      // Slowly increment base rotation if not actively dragging
-      if (!isDragging) {
-        rotationY += 0.0015;
-      }
-
-      // Smooth camera interpolation
-      targetRotY = rotationY + hoverY;
-      targetRotX = rotationX + hoverX;
-
-      camY += (targetRotY - camY) * 0.1;
-      camX += (targetRotX - camX) * 0.1;
-
-      // Update node positions inside sphere boundary
-      nodes.forEach((n) => {
-        n.x += n.vx;
-        n.y += n.vy;
-        n.z += n.vz;
-
-        const d = Math.sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
-        if (d > sphereRadius * 1.3) {
-          n.vx *= -1;
-          n.vy *= -1;
-          n.vz *= -1;
-        }
-      });
-
-      // Update ambient stars
-      stars.forEach((s) => {
-        s.z -= 0.15;
-        if (s.z < -250) {
-          s.z = 250;
-        }
-      });
-
-      // Rotate ring angles
-      ringRotations.forEach((r, idx) => {
-        ringAngles[idx] += r.speed;
-      });
-
-      drawFrame(camY, camX);
-
-      animationFrameId = requestAnimationFrame(renderLoop);
-    };
-
-    // Draw single frame function
-    const drawFrame = (camAngleY: number, camAngleX: number) => {
-      ctx.clearRect(0, 0, width, height);
-
-      interface Renderable {
-        type: "node" | "line" | "star" | "ring-segment" | "monogram";
-        depth: number;
-        draw: () => void;
-      }
-      const renderList: Renderable[] = [];
-
-      // 1. Project nodes and build connections
-      const projectedNodes = nodes.map((n) => {
-        let p = rotY(n.x, n.y, n.z, time * 0.15);
-        p = rotX(p.x, p.y, p.z, time * 0.1);
-
-        // Apply camera rotations
-        p = rotY(p.x, p.y, p.z, camAngleY);
-        p = rotX(p.x, p.y, p.z, camAngleX);
-
-        const scale = focalLength / (focalLength + p.z + 250);
-        const projX = p.x * scale + width / 2;
-        const projY = p.y * scale + height / 2;
-
-        return { x: projX, y: projY, scale, depth: p.z, raw: n };
-      });
-
-      // Add nodes to render list
-      projectedNodes.forEach((pn) => {
-        renderList.push({
-          type: "node",
-          depth: pn.depth,
-          draw: () => {
-            ctx.beginPath();
-            ctx.arc(pn.x, pn.y, pn.raw.size! * pn.scale, 0, Math.PI * 2);
-            const alpha = Math.max(0.2, Math.min(1.0, pn.scale * 1.2));
-            ctx.fillStyle = pn.depth < 0 
-              ? `rgba(6, 182, 212, ${alpha})`
-              : `rgba(37, 99, 235, ${alpha * 0.7})`;
-            ctx.fill();
-
-            if (pn.depth < -30 && mode === "high") {
-              ctx.beginPath();
-              ctx.arc(pn.x, pn.y, pn.raw.size! * pn.scale * 2.5, 0, Math.PI * 2);
-              ctx.strokeStyle = `rgba(6, 182, 212, ${alpha * 0.25})`;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-          },
-        });
-      });
-
-      // Add connections to render list
-      for (let i = 0; i < projectedNodes.length; i++) {
-        for (let j = i + 1; j < projectedNodes.length; j++) {
-          const pi = projectedNodes[i];
-          const pj = projectedNodes[j];
-          const dx = pi.raw.x - pj.raw.x;
-          const dy = pi.raw.y - pj.raw.y;
-          const dz = pi.raw.z - pj.raw.z;
-          const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-          if (dist < 100) {
-            const avgDepth = (pi.depth + pj.depth) / 2;
-            const avgScale = (pi.scale + pj.scale) / 2;
-            const alpha = (1 - dist / 100) * Math.max(0.05, Math.min(0.6, avgScale));
-
-            renderList.push({
-              type: "line",
-              depth: avgDepth,
-              draw: () => {
-                ctx.beginPath();
-                ctx.moveTo(pi.x, pi.y);
-                ctx.lineTo(pj.x, pj.y);
-                const grad = ctx.createLinearGradient(pi.x, pi.y, pj.x, pj.y);
-                grad.addColorStop(0, `rgba(6, 182, 212, ${alpha})`);
-                grad.addColorStop(1, `rgba(139, 92, 246, ${alpha})`);
-                ctx.strokeStyle = grad;
-                ctx.lineWidth = 0.75 * avgScale;
-                ctx.stroke();
-              },
-            });
-          }
-        }
-      }
-
-      // 2. Project and draw ring segments
-      ringRadii.forEach((radius, ringIdx) => {
-        const ringSet = ringRotations[ringIdx];
-        const segments = 40;
-        const currentAngle = ringAngles[ringIdx];
-
-        for (let i = 0; i < segments; i++) {
-          const angle1 = (i / segments) * Math.PI * 2;
-          const angle2 = ((i + 0.65) / segments) * Math.PI * 2;
-
-          let p1 = { x: radius * Math.cos(angle1), y: radius * Math.sin(angle1), z: 0 };
-          let p2 = { x: radius * Math.cos(angle2), y: radius * Math.sin(angle2), z: 0 };
-
-          let r1 = rotZ(p1.x, p1.y, p1.z, currentAngle);
-          r1 = rotX(r1.x, r1.y, r1.z, ringSet.rx);
-          p1 = rotY(r1.x, r1.y, r1.z, ringSet.ry);
-
-          let r2 = rotZ(p2.x, p2.y, p2.z, currentAngle);
-          r2 = rotX(r2.x, r2.y, r2.z, ringSet.rx);
-          p2 = rotY(r2.x, r2.y, r2.z, ringSet.ry);
-
-          let c1 = rotX(p1.x, p1.y, p1.z, camAngleX);
-          p1 = rotY(c1.x, c1.y, c1.z, camAngleY);
-
-          let c2 = rotX(p2.x, p2.y, p2.z, camAngleX);
-          p2 = rotY(c2.x, c2.y, c2.z, camAngleY);
-
-          const s1 = focalLength / (focalLength + p1.z + 250);
-          const s2 = focalLength / (focalLength + p2.z + 250);
-
-          const x1 = p1.x * s1 + width / 2;
-          const y1 = p1.y * s1 + height / 2;
-          const x2 = p2.x * s2 + width / 2;
-          const y2 = p2.y * s2 + height / 2;
-
-          const avgDepth = (p1.z + p2.z) / 2;
-          const avgScale = (s1 + s2) / 2;
-
-          renderList.push({
-            type: "ring-segment",
-            depth: avgDepth,
-            draw: () => {
-              ctx.beginPath();
-              ctx.moveTo(x1, y1);
-              ctx.lineTo(x2, y2);
-              const opacity = Math.max(0.05, Math.min(0.5, avgScale * 0.8));
-              ctx.strokeStyle = avgDepth < 0 
-                ? `rgba(6, 182, 212, ${opacity})`
-                : `rgba(37, 99, 235, ${opacity * 0.6})`;
-              ctx.lineWidth = (ringIdx === 1 ? 1.5 : 0.8) * avgScale;
-              ctx.stroke();
-            },
-          });
-        }
-      });
-
-      // 3. Project ambient stars
-      stars.forEach((s) => {
-        let p = rotY(s.x, s.y, s.z, camAngleY);
-        p = rotX(p.x, p.y, p.z, camAngleX);
-
-        const scale = focalLength / (focalLength + p.z + 250);
-        const px = p.x * scale + width / 2;
-        const py = p.y * scale + height / 2;
-
-        if (px >= 0 && px <= width && py >= 0 && py <= height) {
-          renderList.push({
-            type: "star",
-            depth: p.z,
-            draw: () => {
-              ctx.beginPath();
-              ctx.arc(px, py, 0.75 * scale, 0, Math.PI * 2);
-              const alpha = Math.max(0.1, Math.min(0.6, (1 - p.z / 250) * scale));
-              ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-              ctx.fill();
-            },
-          });
-        }
-      });
-
-      // 4. Central Monogram core symbol (spaced and balanced)
-      renderList.push({
-        type: "monogram",
-        depth: 0,
-        draw: () => {
-          ctx.save();
-          ctx.translate(width / 2, height / 2);
-
-          const pulse = 1 + Math.sin(time * 2) * 0.05;
-          ctx.scale(pulse, pulse);
-
-          const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 45);
-          glow.addColorStop(0, "rgba(6, 182, 212, 0.2)");
-          glow.addColorStop(0.5, "rgba(37, 99, 235, 0.05)");
-          glow.addColorStop(1, "rgba(0,0,0,0)");
-          ctx.fillStyle = glow;
-          ctx.beginPath();
-          ctx.arc(0, 0, 45, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.beginPath();
-          ctx.strokeStyle = "rgba(6, 182, 212, 0.85)";
-          ctx.lineWidth = 3;
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = "rgba(6, 182, 212, 0.8)";
-          
-          // Draw "R" shape on left
-          ctx.moveTo(-26, 16);
-          ctx.lineTo(-26, -16);
-          ctx.lineTo(-12, -16);
-          ctx.bezierCurveTo(-4, -16, -4, -2, -12, -2);
-          ctx.lineTo(-26, -2);
-          ctx.moveTo(-18, -2);
-          ctx.lineTo(-8, 16);
-          
-          // Draw "N" shape on right (completely separate)
-          ctx.moveTo(6, 16);
-          ctx.lineTo(6, -16);
-          ctx.lineTo(24, 16);
-          ctx.lineTo(24, -16);
-
-          ctx.stroke();
-          ctx.restore();
-        },
-      });
-
-      // 5. SORT BY DEPTH
-      renderList.sort((a, b) => b.depth - a.depth);
-
-      // 6. DRAW ALL
-      renderList.forEach((r) => r.draw());
-    };
-
-    renderLoop();
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener("resize", resizeCanvas);
-      canvas.removeEventListener("pointerdown", handlePointerDown);
-      canvas.removeEventListener("pointermove", handlePointerMove);
-      canvas.removeEventListener("pointerup", handlePointerUp);
-      canvas.removeEventListener("pointercancel", handlePointerUp);
-      canvas.removeEventListener("pointerleave", handlePointerLeave);
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", resize);
     };
   }, [mode, isReducedMotion]);
 
@@ -478,8 +269,8 @@ export const DigitalCore: React.FC = () => {
     >
       <canvas
         ref={canvasRef}
-        className="w-full h-full block relative z-10 cursor-grab active:cursor-grabbing touch-none"
-        aria-label="RN Yazılım Digital Core: etkileşimli, 3 boyutlu soyut yapay zeka ve yazılım ağ yapısı."
+        className="w-full h-full block relative z-10"
+        aria-label="RN Yazılım atom modeli animasyonu"
       />
     </div>
   );
