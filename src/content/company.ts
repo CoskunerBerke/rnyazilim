@@ -17,6 +17,9 @@ export const companyInfo: CompanyInfo = {
     instagram: "https://instagram.com/rnyazilim", // [EDITABLE PLACEHOLDER]
     twitter: "https://twitter.com/rnyazilim", // [EDITABLE PLACEHOLDER]
   },
+  associatedSites: [
+    { name: "RN Vize", url: "https://rnvize.com/" },
+  ],
 };
 
 export const services: Service[] = [
@@ -216,6 +219,54 @@ export const projects: Project[] = [
     ],
     technologies: ["React Native", "TypeScript", "WebSockets", "BLE API", "Redux Toolkit"],
     imageUrl: "/images/project-mobile.png",
+  },
+  {
+    slug: "avs-servis",
+    title: "AVS Filo ve Servis Hizmetleri",
+    category: "Web Tasarımı & Kurumsal Arayüz",
+    categorySlug: "web-tasarimi",
+    challenge: "Kurumsal seyahat, filo kiralama ve personel taşımacılığı alanında faaliyet gösteren firmanın, modern, hızlı ve kurumsal kimliğini tam yansıtan dijital bir altyapıya sahip olmaması.",
+    solution: "Şirketin tüm hizmet portföyünü, rezervasyon ve kurumsal teklif taleplerini modern cam kartlar ve optimize edilmiş geçiş efektleri ile sunan, Next.js tabanlı kurumsal web platformu geliştirildi.",
+    results: [
+      "Sayfa açılış hızları mobil cihazlarda %90 oranında iyileştirildi.",
+      "Aylık dijital başvuru oranlarında %45 artış elde edildi.",
+      "Arama motorlarında 'filo hizmetleri' anahtar kelimesinde organik sıralama yükseltildi."
+    ],
+    technologies: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion"],
+    imageUrl: "/images/project-web.png",
+    projectUrl: "https://avsservis.com.tr/",
+  },
+  {
+    slug: "quattro-garaj",
+    title: "Quattro Garaj Otomotiv Çözümleri",
+    category: "Özel Web Yazılımı & E-Ticaret",
+    categorySlug: "e-ticaret",
+    challenge: "Premium otomotiv servis ve garaj hizmetleri sunan markanın, araç sahiplerine yönelik randevu takvimini gerçek zamanlı yönetememesi ve hizmet detaylarını estetik sunamaması.",
+    solution: "Markanın modern otomotiv vizyonunu yansıtan koyu tema odaklı, dinamik randevu alma ve entegre yedek parça sipariş altyapısına sahip özel bir Next.js e-ticaret ve rezervasyon yazılımı geliştirildi.",
+    results: [
+      "Servis randevu çakışmaları sıfıra indirildi.",
+      "Online parça sipariş hacminde ilk çeyrekte %50 artış sağlandı.",
+      "Mobil kullanıcılar için randevu alma süresi 1 dakikanın altına indirildi."
+    ],
+    technologies: ["React", "TypeScript", "Tailwind CSS", "Node.js", "MongoDB"],
+    imageUrl: "/images/project-ecommerce.png",
+    projectUrl: "https://www.quattrogaraj.com/",
+  },
+  {
+    slug: "dent-liart",
+    title: "Dent Liart Dijital Diş Kliniği Portalı",
+    category: "Özel Web Tasarımı",
+    categorySlug: "web-tasarimi",
+    challenge: "Ağız ve diş sağlığı polikliniğinin hastalar için tedavi süreçleri, hekim kadrosu ve online randevu adımlarını içeren, modern ve güven veren bir web varlığının bulunmaması.",
+    solution: "Kullanıcılara hijyenik, minimalist ve premium bir deneyim sunan, tedavileri ve hekim bilgilerini detaylı anlatan, hızlı randevu oluşturma akışına sahip Next.js web portalı.",
+    results: [
+      "Dijital kanallardan gelen hasta randevularında %60 artış yaşandı.",
+      "Poliklinik içi evrak ve kayıt süreçleri hafifletildi.",
+      "Hasta geri bildirimlerinde web sitesi kullanım kolaylığı skoru %95'e ulaştı."
+    ],
+    technologies: ["Next.js", "Tailwind CSS", "Zustand", "Framer Motion", "TypeScript"],
+    imageUrl: "/images/project-reservation.png",
+    projectUrl: "https://dent-liart.vercel.app/",
   },
 ];
 

@@ -48,6 +48,24 @@ export const Footer: React.FC = () => {
                 );
               })}
             </div>
+            {companyInfo.associatedSites && companyInfo.associatedSites.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <span className="text-xs font-semibold text-text-light/50 uppercase tracking-wider block mb-1">Grup Girişimlerimiz</span>
+                <div className="flex flex-wrap gap-2">
+                  {companyInfo.associatedSites.map((site) => (
+                    <a
+                      key={site.name}
+                      href={site.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:text-primary-light transition-colors duration-200 underline underline-offset-4"
+                    >
+                      {site.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quick Links */}

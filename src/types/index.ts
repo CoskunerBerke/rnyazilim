@@ -14,6 +14,7 @@ export interface CompanyInfo {
     instagram: string;
     twitter?: string;
   };
+  associatedSites?: { name: string; url: string }[];
 }
 
 export interface Service {
@@ -36,6 +37,7 @@ export interface Project {
   results: string[];
   technologies: string[];
   imageUrl: string;
+  projectUrl?: string;
 }
 
 export interface FAQItem {

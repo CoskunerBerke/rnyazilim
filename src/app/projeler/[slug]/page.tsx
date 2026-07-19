@@ -2,7 +2,7 @@ import React from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle, Cpu, Calendar, Smartphone, Database, ShoppingCart } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Cpu, Calendar, Smartphone, Database, ShoppingCart, ExternalLink } from "lucide-react";
 import { projects } from "@/content/company";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -235,23 +235,36 @@ export default async function ProjectDetailPage({ params }: Props) {
         <div className="flex flex-col gap-10">
           
           {/* Header Block */}
-          <div className="pb-8 border-b border-white/5 flex flex-col gap-3">
-            <span className="text-xs font-bold text-primary-light uppercase tracking-wider">
-              {project.category}
-            </span>
-            <h1 className="font-plus-jakarta font-extrabold text-2xl sm:text-4xl text-text-light leading-tight">
-              {project.title}
-            </h1>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {project.technologies.map((tech) => (
-                <span
-                  key={tech}
-                  className="px-2.5 py-1 text-xs rounded-md bg-white/5 border border-white/5 text-text-gray font-mono"
-                >
-                  {tech}
-                </span>
-              ))}
+          <div className="pb-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col gap-3">
+              <span className="text-xs font-bold text-primary-light uppercase tracking-wider">
+                {project.category}
+              </span>
+              <h1 className="font-plus-jakarta font-extrabold text-2xl sm:text-4xl text-text-light leading-tight">
+                {project.title}
+              </h1>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {project.technologies.map((tech) => (
+                  <span
+                    key={tech}
+                    className="px-2.5 py-1 text-xs rounded-md bg-white/5 border border-white/5 text-text-gray font-mono"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
             </div>
+            {project.projectUrl && (
+              <a
+                href={project.projectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-primary/20 bg-primary/10 text-primary-light hover:bg-primary/20 transition-all duration-200 text-sm font-semibold shrink-0 cursor-pointer"
+              >
+                Canlı Siteyi İncele
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            )}
           </div>
 
           {/* Interface Mockup */}
