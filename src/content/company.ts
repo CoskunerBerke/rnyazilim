@@ -148,8 +148,8 @@ export const projects: Project[] = [
   {
     slug: "e-ticaret-platformu",
     title: "Yeni Nesil Kozmetik E-Ticaret Mağazası",
-    category: "E-Ticaret Platformu",
-    categorySlug: "e-ticaret",
+    category: "Özel Yazılım",
+    categorySlug: "ozel-yazilim",
     challenge: "Yoğun kampanya dönemlerinde sunucusu çöken, yavaş çalışan ve mobil kullanıcıların sepeti terk etme oranı %80'in üzerinde olan eski bir e-ticaret sistemi.",
     solution: "İstemci tarafında çalışan sepet mantığı (Zustand) ve Next.js'in statik sayfa üretme (SSG) özellikleri kullanılarak tamamen optimize edilmiş, hızlı ödeme adımlarına sahip mobil öncelikli e-ticaret altyapısı kuruldu.",
     results: [
@@ -239,8 +239,8 @@ export const projects: Project[] = [
   {
     slug: "quattro-garaj",
     title: "Quattro Garaj Otomotiv Çözümleri",
-    category: "Özel Web Yazılımı & E-Ticaret",
-    categorySlug: "e-ticaret",
+    category: "Özel Yazılım",
+    categorySlug: "ozel-yazilim",
     challenge: "Premium otomotiv servis ve garaj hizmetleri sunan markanın, araç sahiplerine yönelik randevu takvimini gerçek zamanlı yönetememesi ve hizmet detaylarını estetik sunamaması.",
     solution: "Markanın modern otomotiv vizyonunu yansıtan koyu tema odaklı, dinamik randevu alma ve entegre yedek parça sipariş altyapısına sahip özel bir Next.js e-ticaret ve rezervasyon yazılımı geliştirildi.",
     results: [

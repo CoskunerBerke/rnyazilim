@@ -19,9 +19,16 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
         <motion.div
           ref={ref}
           className={`${baseStyles} ${hoverStyles} ${className}`}
-          whileHover={{ y: -4, scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+          whileHover={{ 
+            y: -8, 
+            scale: 1.02,
+            rotateX: 6,
+            rotateY: -6,
+            boxShadow: "0 20px 45px rgba(0,0,0,0.3)"
+          }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 150, damping: 15 }}
           {...props}
         >
           {children}

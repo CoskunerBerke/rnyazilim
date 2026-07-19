@@ -198,7 +198,6 @@ export const ProjectsSection: React.FC = () => {
   const categories = [
     { slug: "hepsi", name: "Hepsi" },
     { slug: "web-tasarimi", name: "Web Tasarımı" },
-    { slug: "e-ticaret", name: "E-Ticaret" },
     { slug: "ozel-yazilim", name: "Özel Yazılım" },
     { slug: "yapay-zeka", name: "Yapay Zekâ" },
     { slug: "mobil", name: "Mobil" },
