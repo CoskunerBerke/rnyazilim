@@ -1,85 +1,127 @@
-# RN Yazılım Kurumsal Web Sitesi
+# RN Yazılım — Corporate Website
 
-Bu proje, Turkish yazılım şirketi **RN Yazılım** için geliştirilmiş, yüksek performanslı, premium, karanlık tema odaklı ve tamamen responsive kurumsal web sitesidir.
+**Dark-themed, fully responsive corporate website for RN Yazılım, a software company in Ankara.**
 
-Şirket Alan Adı: **https://rnyazilim.com**
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-12-0055FF?logo=framer&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-React_Three_Fiber-000000?logo=threedotjs&logoColor=white)
+![React Hook Form](https://img.shields.io/badge/React_Hook_Form-EC5990?logo=reacthookform&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod-4-3E67B1?logo=zod&logoColor=white)
 
-## 🚀 Teknolojik Altyapı (Technology Stack)
+**Live:** [rnyazilim.com](https://rnyazilim.com)
 
-* **Framework:** Next.js 16 (App Router)
-* **Dil:** TypeScript
-* **Stil:** Tailwind CSS v4 (CSS tabanlı yeni nesil tema yapılandırması)
-* **Animasyonlar:** Framer Motion (Mikro etkileşimler ve reveal-on-scroll efektleri)
-* **İkonlar:** Lucide React
-* **Form Yönetimi:** React Hook Form
-* **Doğrulama (Validation):** Zod
-* **Derleme/Paketleyici:** Webpack (Windows multi-byte karakterli yerel klasör yolları uyumluluğu için `--webpack` bayrağı ile yapılandırılmıştır)
+Client project — designed and developed by Berke Coşkuner for RN Yazılım.
 
-## 📁 Proje Klasör Yapısı (Project Structure)
+## Overview
 
-```text
+The website presents RN Yazılım's services (corporate web design, custom software, e-commerce, AI & automation, mobile apps, maintenance and support), selected project pages and the company's way of working, and collects project requests through a validated contact form. It is exported as a fully static site.
+
+## Features
+
+- **Home page** — hero with a lazy-loaded 3D visual, services, "why us", projects, work process, technical capabilities, FAQ, call-to-action and contact section
+- **Services** (`/hizmetler`) — overview plus a detail page per service (`/hizmetler/[slug]`)
+- **Projects** (`/projeler`) — overview plus a detail page per project (`/projeler/[slug]`)
+- **About** and **Contact** pages; legal pages for privacy, cookies, KVKK and terms of use; custom 404
+- **Contact form** — React Hook Form + Zod validation; simulated locally, or posts to a form service when `NEXT_PUBLIC_FORM_ENDPOINT` is set
+- **Performance mode** — detects reduced-motion preference, slow connections and low-end devices, and scales down animations accordingly
+- **SEO** — per-page metadata, generated `sitemap.xml` and `robots.txt`, `Organization` JSON-LD
+- **Single content source** — company info, services, projects, FAQ and legal texts all live in `src/content/company.ts`
+
+## Tech stack
+
+| Area | Technology |
+| --- | --- |
+| Framework | Next.js 16 (App Router, `output: "export"`), React 19 |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 (CSS-based theme configuration) |
+| Animation / 3D | Framer Motion, three, @react-three/fiber, @react-three/drei, @react-three/postprocessing |
+| Forms | React Hook Form, Zod |
+| Icons | lucide-react |
+| Tooling | ESLint |
+
+## Project structure
+
+```
 src/
-  app/                    # Next.js App Router sayfaları (Hakkımızda, Hizmetler, Projeler, Yasal Sayfalar vb.)
-  components/
-    layout/               # Header, Footer gibi yapısal bileşenler
-    sections/             # Sayfa bölümleri (Hero, Services, FAQ, Contact vb.)
-    ui/                   # Atomik ve animasyonlu UI elemanları (Button, Card, Accordion, HeroVisual vb.)
-    forms/                # Zod onaylı teklif isteme formu (ContactForm)
-  content/                # Merkezi şirket veri yönetimi (company.ts)
-  styles/                 # Küresel stiller ve CSS animasyonları
-  types/                  # TypeScript tip tanımları (index.ts)
+├── app/                  # App Router pages: home, hakkimizda, hizmetler, projeler, iletisim, legal pages,
+│                         # plus sitemap.ts and robots.ts
+├── components/
+│   ├── layout/           # Header, Footer
+│   ├── sections/         # Hero, Services, Projects, Process, FAQ, Contact, CTA ...
+│   ├── ui/               # Button, Card, Accordion, 3D hero visuals
+│   ├── forms/            # ContactForm (Zod validated)
+│   └── context/          # PerformanceModeProvider
+├── content/company.ts    # all company data and page content
+└── types/                # TypeScript types
 ```
 
-## ⚙️ Kurulum ve Çalıştırma (Installation & Running)
+Planning documents in the repository root: `product.md` (product goals), `engineering.md` (architecture), `ui.md` (design guide), `implementation-plan.md`.
 
-### 1. Bağımlılıkların Yüklenmesi
-Projeyi çalıştırmadan önce terminalde aşağıdaki komutla tüm paketleri yükleyin:
+## Getting started
+
 ```bash
 npm install
-```
-
-### 2. Yerel Geliştirme Sunucusunu Başlatma
-Yerel sunucuyu (`http://localhost:3000`) çalıştırmak için:
-```bash
-npm run dev
-```
-
-### 3. Production Derlemesi Alma
-Projenin optimize edilmiş production sürümünü derlemek için:
-```bash
-npm run build
-```
-
-### 4. Derlenen Sürümü Yerelde Test Etme
-Derlenen production paketini yerelde çalıştırmak için:
-```bash
+npm run dev      # http://localhost:3000
+npm run build    # static export to out/
 npm run start
+npm run lint
 ```
 
-## ✏️ Şirket Bilgileri ve İçerik Yönetimi
+The `dev` and `build` scripts use the `--webpack` flag for compatibility with Windows folder paths that contain multi-byte (e.g. Turkish) characters.
 
-Sitedeki tüm şirket bilgileri, hizmetler, projeler, SSS ve yasal politikalar tek bir merkezi dosyada tutulmaktadır. Değişiklik yapmak için başka hiçbir bileşene dokunmadan **`src/content/company.ts`** dosyasını düzenlemeniz yeterlidir:
+### Editing content
 
-* **Şirket Bilgileri:** `companyInfo` nesnesinden resmi adı, e-postayı, telefonu, WhatsApp numarasını, adresi ve sosyal ağ linklerini güncelleyebilirsiniz.
-* **Hizmetler:** `services` dizisine yeni bir hizmet ekleyebilir veya mevcut hizmetlerin başlık, açıklama ve teknolojilerini düzenleyebilirsiniz.
-* **Projeler:** `projects` dizisi üzerinden örnek vaka çalışmalarını değiştirebilirsiniz.
-* **SSS (FAQ):** `faqItems` dizisini düzenleyerek yeni soru-cevap çiftleri ekleyebilirsiniz.
-* **Yasal Metinler:** `legalTexts` altındaki Gizlilik, Çerez, KVKK ve Kullanım Koşulları şablonlarını güncelleyebilirsiniz.
+Edit **`src/content/company.ts`** — no component changes needed:
 
-## 📨 İletişim Formu ve API Entegrasyonu
+- `companyInfo` — legal name, e-mail, phone, WhatsApp, address, social links
+- `services` — service titles, descriptions, technologies
+- `projects` — project / case-study pages
+- `faqItems` — FAQ entries
+- `legalTexts` — privacy, cookie, KVKK and terms templates
 
-İletişim formu varsayılan olarak yerel geliştirme aşamasında simüle (mock) edilmektedir. Gerçek bir arka uç veya form servisi (Formspree, Getform vb.) bağlamak için:
+### Environment variables
 
-1. Kök dizinde `.env` dosyası oluşturun.
-2. `.env` dosyasına aşağıdaki değişkeni tanımlayın:
-```env
-NEXT_PUBLIC_FORM_ENDPOINT="https://sizin-api-servisiniz.com/endpoints/form"
+| Name | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_FORM_ENDPOINT` | Optional. Form service URL (e.g. Formspree, Getform). If unset, the contact form is simulated. |
+
+---
+
+## Türkçe
+
+**RN Yazılım** için geliştirilmiş, karanlık tema odaklı ve tamamen responsive kurumsal web sitesi. RN Yazılım, Ankara'da faaliyet gösteren bir yazılım şirketidir.
+
+**Canlı:** [rnyazilim.com](https://rnyazilim.com)
+
+Müşteri projesi — Berke Coşkuner tarafından RN Yazılım için tasarlanıp geliştirilmiştir.
+
+### Genel bakış
+
+Site; kurumsal web tasarımı, özel yazılım, e-ticaret, yapay zekâ ve otomasyon, mobil uygulama ile bakım ve destek hizmetlerini, proje sayfalarını ve çalışma sürecini tanıtır; teklif taleplerini doğrulamalı bir iletişim formuyla toplar. Proje tamamen statik olarak dışa aktarılır.
+
+### Özellikler
+
+- **Ana sayfa** — gecikmeli yüklenen 3D görselli hero, hizmetler, neden biz, projeler, süreç, teknik yetkinlikler, SSS ve iletişim
+- **Hizmetler** ve **Projeler** — liste ve her biri için detay sayfası
+- **Hakkımızda**, **İletişim**, gizlilik / çerez / KVKK / kullanım koşulları sayfaları ve 404
+- **İletişim formu** — React Hook Form + Zod; `NEXT_PUBLIC_FORM_ENDPOINT` tanımlıysa form servisine gönderir, değilse simüle eder
+- **Performans modu** — azaltılmış hareket tercihi, yavaş bağlantı ve düşük donanımlı cihazlarda animasyonları hafifletir
+- **SEO** — sayfa bazlı metadata, otomatik `sitemap.xml` ve `robots.txt`, `Organization` JSON-LD
+- **Tek içerik kaynağı** — tüm şirket bilgileri ve metinler `src/content/company.ts` dosyasında
+
+### Kurulum
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # out/ klasörüne statik çıktı
 ```
-Dosya mevcut olduğunda form otomatik olarak bu uç noktaya `POST` isteği atacaktır.
 
-## 🔍 SEO ve Arama Motoru Optimizasyonu
+`dev` ve `build` komutları, Türkçe karakter içeren Windows klasör yollarıyla uyum için `--webpack` bayrağıyla çalışır. İçerik güncellemeleri için yalnızca `src/content/company.ts` dosyasını düzenlemek yeterlidir.
 
-* **Metadata:** Sayfa başlıkları ve açıklamaları `src/app/layout.tsx` ve her sayfanın altındaki `metadata` değişkenlerinden yönetilir.
-* **Sitemap:** `/sitemap.xml` dinamik olarak `src/app/sitemap.ts` dosyasından üretilir ve tüm hizmet ile proje sayfalarını otomatik olarak indeksler.
-* **Robots:** `/robots.txt` dosyası `src/app/robots.ts` tarafından dinamik olarak üretilir.
-* **Yapılandırılmış Veri:** Google arama sonuçlarında zengin snippet'ler göstermek üzere `Organization` JSON-LD şeması `src/app/layout.tsx` içine yerleştirilmiştir.
+---
+
+Built by [Berke Coşkuner](https://github.com/CoskunerBerke)
