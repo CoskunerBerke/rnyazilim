@@ -66,9 +66,10 @@ Planning documents in the repository root: `product.md` (product goals), `engine
 npm install
 npm run dev      # http://localhost:3000
 npm run build    # static export to out/
-npm run start
 npm run lint
 ```
+
+Because the site uses `output: "export"`, the production build is the static `out/` folder, which can be uploaded to any static host (`next start` is not used for static exports).
 
 The `dev` and `build` scripts use the `--webpack` flag for compatibility with Windows folder paths that contain multi-byte (e.g. Turkish) characters.
 
